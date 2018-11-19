@@ -1,5 +1,10 @@
 import socket
 
+
+OI = input('Order infomation: ')
+PI = input('Payment infomation: ')
+
+
 RECV_BUFFER = 4096
 HOST = "localhost"
 PORT = 4000

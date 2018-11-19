@@ -12,10 +12,10 @@ server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 try:
     server.bind((HOST, PORT))
 except:
-    print ('Bind fail. ')
+    print ('Bind fail. Somwething was wrong :))')
     sys.exit()
 server.listen(10)
-print('Server listening .....')
+print('Server listening in port ' + str(PORT))
 list_client = []
 
 def clientThead(conn, addr):
