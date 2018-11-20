@@ -1,35 +1,60 @@
 import socket
 from Crypto.Hash import SHA
-from Crypto.Cipher import DES
+from Crypto.Cipher import AES
 from Crypto import Random
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
 from base64 import b64encode, b64decode
+import json
 import os
 
+BLOCK_SIZE = 16
+
+def encryptAES(key, msg):
+    PAD = '#'
+    msg = msg + PAD * (BLOCK_SIZE - len(msg) % BLOCK_SIZE)
+    cipher = AES.new(key)
+    return b64encode(cipher.encrypt(msg)).decode()
 
 # OI = input('Order infomation: ')
 # PI = input('Payment infomation: ')
 OI = "2"
 PI = "2"
-OIMD = SHA.new(OI.encode())
-PIMD = SHA.new(PI.encode())
-POMD = OIMD.hexdigest() + "$" + PIMD.hexdigest()
+OIMD = SHA.new(OI.encode()).hexdigest()
+PIMD = SHA.new(PI.encode()).hexdigest()
+POMD = OIMD + "$" + PIMD
 POMD = SHA.new(POMD.encode())
-# print(POMD)
-key = RSA.importKey(open('Client_private.pem', 'rb').read())
-signer = PKCS1_v1_5.new(key)
-DS = signer.sign(POMD)
-print(DS)
+print(OIMD)
+client_key_private = RSA.importKey(open('Client_private.pem', 'rb').read())
+signer = PKCS1_v1_5.new(client_key_private)
+DS = b64encode(signer.sign(POMD)).decode()
+
+payment_data = {
+    "PI": PI,
+    "OIMD": OIMD,
+    "DS": DS
+}
+
+payment_data = json.dumps(payment_data)
+keyAES = os.urandom(BLOCK_SIZE)
+payment_encrypt = encryptAES(keyAES,payment_data)
+
+bank_key_public = RSA.importKey(open('../Key_store/Bank_public.pem', 'rb').read())
+digital_envelope = str(bank_key_public.encrypt(keyAES, 32))
+
+request_message = {
+    "payment_encrypt": payment_encrypt,
+    "digital_envelope": digital_envelope,
+    "PIMD": PIMD,
+    "OI": OI,
+    "DS": DS
+}
+
+# Test verify DS
 # key2 = RSA.importKey(open('Client_public.pem', 'rb').read())
 # verifer = PKCS1_v1_5.new(key2)
 # DS2 = verifer.verify(POMD, DS)
 # print(DS2)
-
-
-# key = os.urandom(16)
-# iv = Random.get_random_bytes(8)
-# des = DES.new(key, DES.MODE_CBC, iv)
 
 
 
