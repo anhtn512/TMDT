@@ -1,14 +1,14 @@
-import socket
+import socket, json, os
+from base64 import b64encode, b64decode
 from Crypto.Hash import SHA
 from Crypto.Cipher import AES
-from Crypto import Random
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
-from base64 import b64encode, b64decode
-import json
-import os
 
 BLOCK_SIZE = 16
+RECV_BUFFER = 4096
+HOST = "localhost"
+PORT = 4000
 
 def encryptAES(key, msg):
     PAD = '#'
@@ -21,10 +21,15 @@ def decryptAES(key, msg):
     cipher = AES.new(key)
     return cipher.decrypt(b64decode(msg)).decode().rstrip(PAD)
 
-# OI = input('Order infomation: ')
-# PI = input('Payment infomation: ')
-OI = "2"
-PI = "2"
+client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+client.connect((HOST,PORT))
+message = client.recv(RECV_BUFFER)
+print(message.decode())
+
+OI = input('Order infomation: ')
+PI = input('Payment infomation: ')
+# OI = "2"
+# PI = "2"
 OIMD = SHA.new(OI.encode()).hexdigest()
 PIMD = SHA.new(PI.encode()).hexdigest()
 POMD = OIMD + "$" + PIMD
@@ -47,8 +52,10 @@ bank_key_public = RSA.importKey(open('../Key_store/Bank_public.pem', 'rb').read(
 digital_envelope = str(bank_key_public.encrypt(keyAES, 32))
 
 request_message = {
-    "payment_encrypt": payment_encrypt,
-    "digital_envelope": digital_envelope,
+    "payment_data": {
+        "payment_encrypt": payment_encrypt,
+        "digital_envelope": digital_envelope
+    },
     "PIMD": PIMD,
     "OI": OI,
     "DS": DS
@@ -61,7 +68,8 @@ print("initialize request message to shop done. sending....")
 # Test verify DS
 # key2 = RSA.importKey(open('Client_public.pem', 'rb').read())
 # verifer = PKCS1_v1_5.new(key2)
-# DS2 = verifer.verify(POMD, DS)
+# print(DS)
+# DS2 = verifer.verify(POMD, b64decode(DS))
 # print(DS2)
 
 # test decrypt payment data
@@ -71,20 +79,12 @@ print("initialize request message to shop done. sending....")
 # payment_data2 = AES.new(keyAES2).decrypt(b64decode(payment_encrypt))
 # print(json.loads(decryptAES(keyAES2, payment_encrypt)))
 
-
-RECV_BUFFER = 4096
-HOST = "localhost"
-PORT = 4000
-
-client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client.connect((HOST,PORT))
-message = client.recv(RECV_BUFFER)
-print(message.decode())
 message = json.dumps(request_message)
-if message:
-    client.send(message.encode())
+client.send(message.encode())
 message = client.recv(RECV_BUFFER)
-print(message.decode())
+data = json.loads(message)
+print('Response content:')
+print(json.dumps(data, indent=4))
 
 client.close()
-
+#
