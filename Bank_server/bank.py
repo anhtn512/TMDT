@@ -1,4 +1,4 @@
-import socket
+import socket, json
 from threading import *
 import sys
 
@@ -18,21 +18,25 @@ server.listen(10)
 print('Server listening in port ' + str(PORT))
 list_client = []
 
+def processing(data):
+    return True
+
 def clientThead(conn, addr):
     conn.send(b"Welcome to shop atoz!")
-    while True:
-        try:
-            message = conn.recv(RECV_BUFFER)
-            if message:
-                print ("<" + addr[0] + "> " + message.decode())
-                message_to_send = "<" + addr[0] + "> " + message.decode()
-                conn.send(message_to_send.encode())
-            else:
-                conn.close()
-                list_client.remove(conn)
-        except:
-            print('ahihi')
-            continue
+    try:
+        message = conn.recv(RECV_BUFFER)
+        if message:
+            print("[" + addr[0] + "]: connected")
+            data = json.loads(message)
+            print(json.dumps(data, indent=4))
+            data = processing(data)
+            message_to_send = "[" + addr[0] + "]: accepted :D"
+            conn.send(message_to_send.encode())
+        else:
+            conn.close()
+            list_client.remove(conn)
+    except:
+        print('ahihi')
 
 while True:
     conn, addr = server.accept()
