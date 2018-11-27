@@ -42,6 +42,7 @@ def check(data):
     payment_data = json.loads(payment_data)
     print('Payment infomation:')
     print(json.dumps(payment_data, indent=4))
+    print('------------------------------------------------------')
     PIMD = SHA.new(payment_data['PI'].encode()).hexdigest()
     POMD = payment_data['OIMD'] + "$" + PIMD
     POMD = SHA.new(POMD.encode())
@@ -55,9 +56,11 @@ def clientThead(conn, addr):
     message = conn.recv(RECV_BUFFER)
     print("[" + addr[0] + "]: connected")
     if message:
+        print('------------------------------------------------------')
         print('Request content:')
         data = json.loads(message)
         print(json.dumps(data, indent=4))
+        print('------------------------------------------------------')
         check_payment_data = check(data)
         if check_payment_data:
             print('Payment information is valid: ', check_payment_data)
@@ -71,7 +74,7 @@ def clientThead(conn, addr):
                 'message': 'Payment infomation is invalid, something wrong :((',
                 'code': False
             }
-
+        print('------------------------------------------------------')
         conn.send(json.dumps(message_to_send).encode())
     else:
         conn.close()

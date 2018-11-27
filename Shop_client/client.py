@@ -24,10 +24,12 @@ def decryptAES(key, msg):
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client.connect((HOST,PORT))
 message = client.recv(RECV_BUFFER)
+print('------------------------------------------------------')
 print(message.decode())
-
+print('------------------------------------------------------')
 OI = input('Order infomation: ')
 PI = input('Payment infomation: ')
+print('------------------------------------------------------')
 # OI = "2"
 # PI = "2"
 OIMD = SHA.new(OI.encode()).hexdigest()
@@ -85,6 +87,7 @@ message = client.recv(RECV_BUFFER)
 data = json.loads(message)
 print('Response content:')
 print(json.dumps(data, indent=4))
+print('------------------------------------------------------')
 
 client.close()
 #

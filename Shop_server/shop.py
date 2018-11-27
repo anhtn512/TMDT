@@ -39,14 +39,17 @@ def clientThead(conn, addr):
     conn.send(b"Welcome to shop atoz!")
     message = conn.recv(RECV_BUFFER)
     if message:
+        print('------------------------------------------------------')
         print('Request content:')
         data = json.loads(message)
         print(json.dumps(data, indent=4))
+        print('------------------------------------------------------')
         payment_data = data['payment_data']
         check_order_data = check(data)
         if (check_order_data):
             print('Order information is valid: ', data['OI'])
             print('Waiting check the payment information from the bank...')
+            print('------------------------------------------------------')
             sleep(5)
             client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             client.connect((HOST_BANK, PORT_BANK))
@@ -56,11 +59,13 @@ def clientThead(conn, addr):
             message_check_payment = json.loads(message_check_payment)
             print('Response from bank:')
             print(json.dumps(message_check_payment, indent=4))
+            print('------------------------------------------------------')
             if message_check_payment['code']:
                 print('Payment information is valid!')
                 print('Ready to pay !!!')
             else:
                 print('Payment information is invalid!')
+            print('------------------------------------------------------')
             message_to_send = message_check_payment
 
         else:
